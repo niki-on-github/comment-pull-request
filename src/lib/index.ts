@@ -132,6 +132,7 @@ export class CommentClient implements ForgeIntegration {
       ? `<!-- ${COMMENT_TAG_ID} "${comment_tag}" -->`
       : null;
     const body = comment_tag_pattern ? `${content}\n${comment_tag_pattern}` : content;
+    const target = `${owner}/${repo}#${issue_number}`;
 
     const addReactions = async (cid: number) => {
       if (reactions) await this.addReactions({
@@ -146,6 +147,7 @@ export class CommentClient implements ForgeIntegration {
 
       if (comment) {
         if (recreate) {
+          core.info("Recreating comment for " + target);
           await this.deleteComment({
             owner, repo, comment_id: comment.id,
           });
@@ -156,6 +158,7 @@ export class CommentClient implements ForgeIntegration {
           await addReactions(newC.id);
           return;
         } else {
+          core.info("Updating comment for " + target);
           await this.updateComment({
             owner, repo, comment_id: comment.id, body,
           });
@@ -163,7 +166,7 @@ export class CommentClient implements ForgeIntegration {
           return;
         }
       } else if (create_if_not_exists) {
-        core.info("No comment has been found with asked pattern. Creating a new comment.");
+        core.info("No comment has been found with asked pattern.");
       } else {
         core.info(
           "Not creating comment as the pattern has not been found. Use `create_if_not_exists: true` to create a new comment anyway.",
@@ -172,6 +175,7 @@ export class CommentClient implements ForgeIntegration {
       }
     }
 
+    core.info("Creating a new comment for " + target);
     const newC = await this.createComment({
       repo, owner, issue_number, body,
     });
