@@ -37506,7 +37506,7 @@ async function run() {
             || context.payload.pull_request?.number
             || context.payload.issue?.number;
         if (!issue_number) {
-            core.setFailed("No issue/pull request in input neither in current context.");
+            core.info("No issue/pull request in input neither in current context.");
             return;
         }
         const api = CommentClient.fromEnv();
