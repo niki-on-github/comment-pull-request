@@ -13,8 +13,8 @@ function mapComment(c: Comment): CommentData {
 export class Gitea implements ForgeIntegration {
   private api;
 
-  constructor(token: string) {
-    this.api = giteaApi("https://try.gitea.com/", { token });
+  constructor(url: string, token: string) {
+    this.api = giteaApi(url, { token });
   }
 
   async getComments(

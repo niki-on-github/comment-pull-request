@@ -10,16 +10,19 @@ import { env } from "process";
 export class CommentClient implements ForgeIntegration {
   private api: ForgeIntegration;
 
-  constructor(token: string, gitea: boolean) {
-    if (gitea) {
-      this.api = new Gitea(token);
+  constructor(token: string, giteaUrl?: string) {
+    if (giteaUrl) {
+      this.api = new Gitea(giteaUrl, token);
     } else {
       this.api = new GitHub(token);
     }
   }
 
   static fromEnv(): CommentClient {
-    return new CommentClient(core.getInput("GITHUB_TOKEN"), Boolean(env.GITEA_ACTIONS));
+    return new CommentClient(
+      core.getInput("GITHUB_TOKEN"),
+      env.GITEA_ACTIONS ? env.GITHUB_SERVER_URL : undefined,
+    );
   }
 
   async getComments(params:

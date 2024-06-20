@@ -37254,8 +37254,8 @@ function mapComment(c) {
 }
 class Gitea {
     api;
-    constructor(token) {
-        this.api = giteaApi("https://try.gitea.com/", { token });
+    constructor(url, token) {
+        this.api = giteaApi(url, { token });
     }
     async getComments({ owner, repo, issue_number, page, }) {
         if (page > 1)
@@ -37348,16 +37348,16 @@ const external_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import
 
 class CommentClient {
     api;
-    constructor(token, gitea) {
-        if (gitea) {
-            this.api = new Gitea(token);
+    constructor(token, giteaUrl) {
+        if (giteaUrl) {
+            this.api = new Gitea(giteaUrl, token);
         }
         else {
             this.api = new GitHub(token);
         }
     }
     static fromEnv() {
-        return new CommentClient(core.getInput("GITHUB_TOKEN"), Boolean(external_process_namespaceObject.env.GITEA_ACTIONS));
+        return new CommentClient(core.getInput("GITHUB_TOKEN"), external_process_namespaceObject.env.GITEA_ACTIONS ? external_process_namespaceObject.env.GITHUB_SERVER_URL : undefined);
     }
     async getComments(params) {
         return this.api.getComments(params);
