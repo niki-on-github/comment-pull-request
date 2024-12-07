@@ -24,7 +24,7 @@
     "gitea-js": "^1.22.0"
   },
   "devDependencies": {
-    "@octokit/types": "^13.5.0",
+    "@octokit/types": "^13.6.2",
     "@stylistic/eslint-plugin": "^2.1.0",
     "@tsconfig/node20": "^20.1.4",
     "@types/node": "^20.14.5",
