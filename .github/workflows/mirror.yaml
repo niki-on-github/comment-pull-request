@@ -1,0 +1,69 @@
+name: Monitor External Repository
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # This runs at midnight (UTC) every Sunday
+  workflow_dispatch:
+
+env:
+  SRC_REPO_URL: https://code.thetadev.de/actions/comment-pull-request.git
+
+jobs:
+  check_for_changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v3
+
+      - name: Download last synced commit
+        uses: actions/download-artifact@v3
+        with:
+          name: last-synced-commit
+          path: .github/
+        continue-on-error: true
+
+      - name: Read last synced commit
+        id: read_commit
+        run: |
+          if [ -f .github/last_synced_commit.txt ]; then
+            echo "LAST_SYNCED_COMMIT=$(cat .github/last_synced_commit.txt)" >> $GITHUB_OUTPUT
+          else
+            echo "LAST_SYNCED_COMMIT=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for changes and apply them
+        id: check_changes
+        run: |
+          set -x
+          git clone $SRC_REPO_URL temp_repo
+          cd temp_repo
+          LATEST_COMMIT=$(git rev-parse HEAD)
+          echo "LATEST_COMMIT=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+          if [ -n "${{ steps.read_commit.outputs.LAST_SYNCED_COMMIT }}" ]; then
+            git diff ${{ steps.read_commit.outputs.LAST_SYNCED_COMMIT }} $LATEST_COMMIT -- ':!.github' > ../changes.patch
+          fi
+          cd ..
+          if [ -s changes.patch ]; then
+            git apply --3way changes.patch || git apply --reject changes.patch
+          fi
+          mkdir -p .github
+          echo "$LATEST_COMMIT" > .github/last_synced_commit.txt
+          git add .github/last_synced_commit.txt
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -m "Update from external repository and last synced commit"
+          rm -rf temp_repo changes.patch
+
+      - name: Create or update pull request
+        if: steps.check_changes.outputs.LATEST_COMMIT != steps.read_commit.outputs.LAST_SYNCED_COMMIT
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GHCR_TOKEN }}
+          commit-message: Update from external repository
+          title: Update from external repository
+          body: |
+            This PR updates the repository with the latest changes from the external repository.
+            Latest commit: ${{ steps.check_changes.outputs.LATEST_COMMIT }}
+          branch: update-from-external-repo
+          base: main
+
