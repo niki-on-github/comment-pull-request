@@ -36,16 +36,17 @@ jobs:
             git diff ${{ steps.read_commit.outputs.LAST_SYNCED_COMMIT }} $LATEST_COMMIT -- ':!.github' > ../changes.patch
           fi
           cd ..
-          if [ -s changes.patch ]; then
+          rm -rf temp_repo
+          if [ -e changes.patch ]; then
             git apply --3way changes.patch || git apply --reject changes.patch
           fi
+          rm -rf changes.patch
           mkdir -p .github
           echo "$LATEST_COMMIT" > .github/last_synced_commit.txt
           git add .github/last_synced_commit.txt
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git commit -m "Update from external repository and last synced commit"
-          rm -rf temp_repo changes.patch
+          git commit -m "Update from external repository and last synced commit" || true
 
       - name: Create or update pull request
         if: steps.check_changes.outputs.LATEST_COMMIT != steps.read_commit.outputs.LAST_SYNCED_COMMIT
