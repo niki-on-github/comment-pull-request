@@ -38,7 +38,7 @@ jobs:
           cd ..
           rm -rf temp_repo
           if [ -e changes.patch ]; then
-            git apply --3way changes.patch || git apply --reject changes.patch
+            git apply --allow-empty --3way changes.patch || git apply --allow-empty --reject changes.patch
           fi
           rm -rf changes.patch
           mkdir -p .github
